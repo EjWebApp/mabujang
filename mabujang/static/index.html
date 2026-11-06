@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마부장님 — AI 유지보수</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{--bg:#f6f6f3;--panel:#fff;--ink:#1c1f1d;--ink2:#3a403c;--mute:#6b726e;--mute2:#9a9f9b;--line:#e6e7e2;--line2:#dcded8;--acc:#1f6b4f;--acc-h:#185a42;--acc2:#e5f3ec;--warn:#a8321f;--warn2:#fbebe7;
+    --red:#c7402d;--red-ink:#8f2a1c;--red-bg:#fdf3f1;--red-line:#f0d4cf;--amber:#9a5a12;--amber-bg:#fdf1e2;--amber-line:#f0dcc0;--code:#1e2421;
+    --side:#1b2a24;--side2:#26392f;--side-line:#3a5045;--side-ink:#e8ece9;--side-mute:#9fb0a8;
+    --mono:"JetBrains Mono","Pretendard Variable",Pretendard,Consolas,monospace}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc);text-decoration:none}a:hover{color:#164d39;text-decoration:underline}
+  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#d9dbd6;border-radius:8px}
+  button{font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid var(--line2);background:#fff;color:var(--ink);border-radius:9px;padding:0 14px;height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0}
+  button:hover{background:#f3f4f0}
+  button.pri{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+  button.pri:hover{background:var(--acc-h)}
+  button.danger{color:var(--red-ink);border-color:#e6bdb5}
+  button.danger:hover{background:var(--red-bg)}
+  button:disabled{opacity:.5;cursor:default}
+  button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+  input,textarea,select{font:inherit;width:100%;border:1px solid var(--line2);border-radius:9px;padding:9px 11px;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus,select:focus{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2)}
+  label{display:block;font-size:12px;font-weight:500;color:var(--mute);margin:12px 0 5px}
+  code{font-family:var(--mono);font-size:.92em}
+
+  .app{display:grid;grid-template-columns:clamp(200px,18vw,248px) minmax(0,1fr) clamp(240px,24vw,340px);height:100vh;height:100dvh;overflow:hidden}
+  /* 왼쪽: 저장소 */
+  aside{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;min-height:0}
+  .brand{padding:22px 20px 18px;display:flex;align-items:center;gap:12px}
+  .logo{width:36px;height:36px;border-radius:10px;background:#3f9a72;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0}
+  .brand b{display:block;font-size:16px;font-weight:700;letter-spacing:-.01em}.brand small{display:block;color:var(--side-mute);font-size:12px;margin-top:2px}
+  .side-h{padding:14px 20px 8px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#7d8f87}
+  #repos{padding:0 10px;display:flex;flex-direction:column;gap:4px}
+  #repos>*{flex-shrink:0}
+  #repos .empty{color:var(--side-mute);padding:24px 10px}
+  .repo{padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+  .repo:hover{background:rgba(255,255,255,.04)}
+  .repo.on{background:var(--side2)}
+  .repo .r1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .repo b{font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .repo small{font-family:var(--mono);font-size:11px;color:var(--side-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rst{display:flex;align-items:center;gap:5px;font-size:11px;color:#e6c98f;flex-shrink:0}
+  .rst:before{content:'';width:6px;height:6px;border-radius:50%;background:#e0b25c}
+  .rst.ready{color:#8fd3b0}.rst.ready:before{background:#5fd39c}
+  .rst.error{color:#f0a699}.rst.error:before{background:#ef7f6b}
+  .side-foot{padding:16px}
+  .side-foot button{width:100%;height:42px;border-radius:10px;border-color:var(--side-line);background:transparent;color:var(--side-ink);font-weight:600}
+  .side-foot button:hover{background:var(--side2)}
+
+  /* 가운데: 채팅 */
+  main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg)}
+  header{padding:16px 28px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .hinfo{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .hline{display:flex;align-items:center;gap:10px;min-width:0}
+  header .t{margin:0;font-size:18px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  header small{font-size:12px;color:var(--mute);display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;min-width:0}
+  header small .u{font-family:var(--mono);overflow-wrap:anywhere}
+  header small i{font-style:normal;color:#c4c7c1}
+  header small b{color:var(--ink);font-family:var(--mono);font-weight:500}
+  .mob,.shade{display:none}
+  .hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .cost{font-size:12px;color:var(--mute);padding-right:8px;white-space:nowrap}.cost b{color:var(--ink);font-weight:600}
+  .free{font-size:10px;color:var(--acc);font-weight:600}
+  button.danger .free{color:inherit}
+  .log{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0;padding:24px max(28px,calc((100% - 820px)/2)) 32px;display:flex;flex-direction:column;gap:18px}
+  .log>*{flex-shrink:0;min-width:0}
+  .msg{overflow-wrap:anywhere;font-size:14px;line-height:1.6}
+  .tm{font-size:11px;color:var(--mute2);font-weight:400;line-height:1.4}
+  .msg.owner{align-self:flex-end;max-width:70%;background:var(--acc);color:#fff;border-radius:14px 14px 4px 14px;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
+  .msg.owner.cmd{font-weight:600}
+  .msg.owner .tm{color:#b7dccb}
+  .msg.owner code{background:rgba(255,255,255,.15);border-radius:4px;padding:0 3px}
+  .msg.mabu,.msg.action_ok{align-self:flex-start;max-width:min(600px,100%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+  .msg.mabu .who{font-size:12px;color:var(--acc);font-weight:600}
+  .ttl{font-size:15px;font-weight:600;line-height:1.45}
+  .body{color:var(--ink2)}
+  .body:empty{display:none}
+  .chead{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;line-height:1.45;min-width:0}
+  .chk-i{width:20px;height:20px;border-radius:6px;background:var(--acc2);color:var(--acc);display:grid;place-items:center;font-size:12px;flex-shrink:0}
+  .bang{width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .ref{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--mute)}
+  /* 실패 안내: 빨간 머리글 + 어두운 로그 */
+  .msg.alert{background:var(--panel);border:1px solid var(--red-line);border-radius:14px;overflow:hidden}
+  .msg.alert .chead{padding:14px 18px;background:var(--red-bg);color:var(--red-ink);gap:10px}
+  .msg.alert .chead .tm{margin-left:auto;color:#a8766d;white-space:nowrap}
+  .msg.alert .cbody{padding:14px 18px;color:var(--ink2)}
+  .msg.alert.warn{border-color:var(--amber-line)}
+  .msg.alert.warn .chead{background:var(--amber-bg);color:var(--amber)}
+  .msg.alert.warn .chead .tm{color:#ab8a5e}
+  .msg.alert.warn .bang{background:#c9822b}
+  /* 버튼 작업 실패: 로그 + 원인 분석 요청 */
+  .msg.action_fail{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+  .msg.action_fail .chead{gap:10px;flex-wrap:wrap}
+  .msg .ask{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .msg .ask button{height:auto;min-height:38px;padding:6px 16px;border:0;background:var(--ink);color:#fff;font-weight:600;white-space:normal}
+  .msg .ask button:hover{background:#333835}
+  .msg .ask .cst{font-size:12px;color:#a2631c}
+  .msg .ask .tm{margin-left:auto}
+  .log pre{margin:6px 0;padding:12px 14px;border-radius:10px;background:var(--code);color:#d6dcd8;font-family:var(--mono);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;max-width:100%;overflow-x:auto}
+  .log pre .err{color:#f08a78}
+  .log .action_fail pre{margin:0}
+  .log .alert>pre{margin:0;padding:14px 18px;border-radius:0}
+  .msg.owner pre{background:rgba(255,255,255,.15);color:inherit}
+  .msg.system{align-self:center;max-width:100%;text-align:center;color:var(--mute);font-size:12px;line-height:1.5}
+  .msg.system.pill{background:#ecede8;padding:6px 12px;border-radius:999px;font-family:var(--mono)}
+  .msg .lnk{font-family:var(--mono);font-size:13px}
+  .msg.mabu a{overflow-wrap:anywhere}
+  .msg .openf{height:auto;min-height:32px;padding:6px 10px;margin:6px 6px 0 0;color:var(--acc);border-color:var(--acc);white-space:normal;text-align:left}
+  .day{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:12px;font-weight:500;color:var(--mute)}
+  .day:before,.day:after{content:'';flex:1;height:1px;background:#e2e3de}
+  .prog{color:var(--mute);font-size:12px}
+  .prog summary{cursor:pointer}
+  .prog div{padding:2px 0 2px 12px;border-left:2px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere}
+  .foot{background:var(--panel);border-top:1px solid var(--line);padding:12px max(28px,calc((100% - 820px)/2)) 18px;display:flex;flex-direction:column;gap:12px}
+  .quick{display:flex;flex-wrap:wrap;gap:8px}
+  .quick:empty{display:none}
+  .chip{display:flex;align-items:center;gap:6px;max-width:100%;padding:6px 6px 6px 12px;border-radius:10px;background:#f3f4f0;border:1px solid var(--line)}
+  .chip span{font-size:12px;color:var(--ink2);margin-right:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip b{font-weight:600}
+  .chip button{height:28px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:600}
+  .chip.bad{background:var(--red-bg);border-color:var(--red-line)}
+  .chip.bad:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;margin-right:4px}
+  .chip.bad span{color:var(--red-ink);font-weight:500}
+  .compose{display:flex;gap:8px;align-items:flex-end;padding:8px;border:1px solid #d6d9d3;border-radius:14px;background:#fff}
+  .compose:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2)}
+  .compose textarea,.compose textarea:focus{flex:1;border:0;outline:0;box-shadow:none;resize:none;line-height:1.5;padding:6px 8px;background:transparent}
+  .compose button{height:40px;padding:0 20px;border-radius:10px;font-size:14px}
+  .empty{padding:40px;color:var(--mute);text-align:center}
+
+  /* 오른쪽: 작업 현황 */
+  .jobs{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .sec{padding:20px 20px 14px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #eeefea}
+  .sec h2{margin:0;font-size:15px;font-weight:700}.sec span{font-size:12px;color:var(--mute)}
+  #jobs{overflow-x:hidden;min-width:0;padding:8px 10px 16px;display:flex;flex-direction:column;gap:2px}
+  #jobs>*{flex-shrink:0}
+  .scroll{overflow:auto;flex:1;min-height:0}
+  .job{padding:14px 12px;border-radius:10px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+  .job:hover{background:var(--bg)}
+  .job .h{display:flex;align-items:center;gap:8px}
+  .job .id{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--mute)}
+  .job .kind{font-size:11px;color:var(--mute)}
+  .kebab{border:0;background:none;padding:0 4px;height:auto;margin-left:auto;font-size:14px;line-height:1;color:#b0b4ae}
+  .kebab:hover{background:none;color:var(--ink)}
+  .job .req{font-size:14px;font-weight:500;line-height:1.45;text-wrap:pretty;overflow-wrap:anywhere}
+  .job .meta{display:flex;align-items:center;gap:2px 8px;flex-wrap:wrap;font-size:11px;color:#8a908b}
+  .job .meta b{font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .job .acts{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+  .job .acts button{height:auto;font-size:11px;padding:4px 9px;border-radius:7px;border-color:#e2e3de;color:var(--ink2)}
+  .job .acts button.pri{color:#fff;border-color:var(--acc)}
+  .job .acts button.danger{color:var(--red-ink);border-color:#e6bdb5}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#efefec;color:#5f6561;white-space:nowrap}
+  .badge.ready,.badge.done,.badge.yes{background:var(--acc2);color:var(--acc)}
+  .badge.answered,.badge.running,.badge.queued,.badge.deploying,.badge.reverting,.badge.cloning,.badge.setting_up{background:#e8eef8;color:#2d4f8a}
+  .badge.awaiting_approval{background:#fff4d6;color:#8a6200}
+  .badge.needs_developer{background:var(--amber-bg);color:var(--amber)}
+  .badge.failed,.badge.error,.badge.conflict{background:var(--warn2);color:var(--warn)}
+  .badge.reverted{background:#f0ecf6;color:#5b4387}
+  .badge.no{background:#f3f1ec;color:var(--mute)}
+
+  /* 대화 상자 */
+  dialog{border:0;border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:92vh;overflow:auto;color:var(--ink);box-shadow:0 12px 40px rgba(20,30,25,.2)}
+  dialog::backdrop{background:rgba(20,30,25,.4)}
+  dialog>b{font-size:16px;font-weight:700}
+  dialog pre{margin:0;background:#f3f4f0;padding:10px 12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+  .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px}.chk input{width:auto;box-shadow:none}
+  #setDlg{width:540px}
+  .tabs{display:flex;align-items:center;gap:6px;margin-bottom:6px}.tabs b{margin-right:auto;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .tab{height:30px;padding:0 12px;border-radius:999px}.tab.on,.tab.on:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
+  .hint{font-size:12px;color:var(--mute);margin:8px 0 10px;line-height:1.5}
+  .drow{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eeefea}
+  .drow .p{font-family:var(--mono);font-size:12px;word-break:break-all}.drow .d{font-size:13px;margin:4px 0}
+  .drow .dacts{display:flex;flex-direction:column;gap:6px}.drow .dacts button{height:30px;padding:0 10px}
+  .drow small{display:block;color:var(--mute);font-size:11px;word-break:break-all}
+  .envrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #eeefea;font-family:var(--mono);font-size:12px}
+  .envrow button{height:26px;padding:0 8px;font-size:12px}
+  .kv{display:flex;gap:6px}.kv input:first-child{width:40%}.kv button{height:auto}
+  #jobDlg{width:760px}
+  .kv2{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;font-size:13px;margin:12px 0}.kv2 span{color:var(--mute)}
+  .sec2{font-weight:600;font-size:13px;margin:16px 0 6px}
+  .diff{max-height:420px;font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre;overflow:auto;background:#f6f6f3;padding:10px 12px;border-radius:8px}
+  .diff .a{background:#e5f3ec;color:#1e6b34}.diff .d{background:var(--warn2);color:var(--warn)}.diff .f{font-weight:700;color:var(--ink);margin-top:6px}.diff .h{color:var(--mute)}
+
+  /* 태블릿·휴대폰: 채팅만 보이고 저장소 목록(☰)·작업 현황은 서랍으로 연다 */
+  @media (max-width:980px){
+    .app{grid-template-columns:minmax(0,1fr)}
+    aside,.jobs{display:none;position:fixed;top:0;bottom:0;width:min(320px,86vw);z-index:20;box-shadow:0 0 24px rgba(0,0,0,.2)}
+    aside{left:0}.jobs{right:0}
+    .app.side aside,.app.showjobs .jobs{display:flex}
+    .shade{position:fixed;inset:0;background:rgba(20,30,25,.4);z-index:15}
+    .app.side .shade,.app.showjobs .shade{display:block}
+    .mob{display:inline-flex}
+    header{padding:10px 12px;gap:8px}
+    .hinfo{flex-basis:0}
+    .hbtns{width:100%;gap:6px}
+    .hbtns button{height:34px;padding:0 10px}
+    .cost{width:100%;padding:0}
+    .log{padding:14px 12px 20px;gap:14px}
+    .msg.owner{max-width:85%}
+    .foot{padding:8px 12px 10px;gap:8px}
+    .quick{max-height:92px;overflow-y:auto}
+    .compose button{padding:0 14px}
+    input,textarea,select{font-size:16px}  /* iOS 입력 시 자동 확대 방지 */
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside>
+    <div class="brand"><div class="logo">마</div><div><b>마부장님</b><small>AI 유지보수 담당</small></div></div>
+    <div class="side-h">저장소</div>
+    <div class="scroll" id="repos"></div>
+    <div class="side-foot"><button onclick="openNew()">+ 저장소 등록</button></div>
+  </aside>
+  <main>
+    <header><button class="mob" onclick="toggleDrawer('side')" title="저장소 목록">☰</button>
+      <div class="hinfo"><div class="hline"><h1 class="t" id="title">저장소를 선택하세요</h1><span id="hstatus"></span></div><small id="sub"></small></div>
+      <div class="hbtns" id="hbtns" style="display:none">
+        <span class="cost" id="cost"></span>
+        <button onclick="action('build')" title="검증 명령 실행 — AI 비용 없음">빌드 확인<span class="free">무료</span></button>
+        <button id="runBtn" onclick="toggleRun()" title="서버 실행 명령 — AI 비용 없음">서버 실행<span class="free">무료</span></button>
+        <button onclick="openSettings()">설정</button>
+        <button class="mob" onclick="toggleDrawer('showjobs')">작업 현황</button>
+      </div></header>
+    <div class="log" id="log"><div class="empty">저장소를 등록하거나 선택하세요.</div></div>
+    <div class="foot">
+    <div class="quick" id="quick"></div>
+    <div class="compose">
+      <textarea id="input" rows="2" placeholder="마부장님께 요청하세요. 예) 메인 화면 공지 문구를 '10월 점검 안내'로 바꿔줘" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();send()}"></textarea>
+      <button class="pri" id="sendBtn" onclick="send()">보내기</button>
+    </div>
+    </div>
+  </main>
+  <div class="jobs"><div class="sec"><h2>작업 현황</h2><span id="jobCount"></span></div><div class="scroll" id="jobs"></div></div>
+  <div class="shade" onclick="closeDrawers()"></div>
+</div>
+
+<dialog id="newDlg">
+  <b>저장소 등록</b>
+  <label>이름</label><input id="n_name" placeholder="예) 회사 홈페이지">
+  <label>Git 주소</label><input id="n_url" placeholder="https://github.com/owner/repo.git">
+  <label>작업 기준 브랜치</label><input id="n_branch" value="main">
+  <label>검증 명령 (선택)</label><input id="n_test" placeholder="예) npm test">
+  <label>실행 전 명령 (선택)</label><input id="n_pre" placeholder="예) docker start my-postgres">
+  <label>실행 전 확인할 포트 (선택)</label><input id="n_ports" placeholder="예) 5432">
+  <label>서버 실행 명령 (선택)</label><input id="n_run" placeholder="예) gradlew.bat bootRun">
+  <label>실행 확인 주소 (선택)</label><input id="n_url2" placeholder="예) http://localhost:9080/login">
+  <label>배포 명령 (선택)</label><input id="n_deploy" placeholder="예) docker compose up -d --build">
+  <div class="chk"><input type="checkbox" id="n_push" checked> 배포 시 원격 저장소에 push</div>
+  <div class="chk"><input type="checkbox" id="n_auto"> 위험도 낮은 작업은 승인 없이 자동 배포</div>
+  <div class="row"><button onclick="newDlg.close()">취소</button><button class="pri" onclick="createRepo()">등록</button></div>
+</dialog>
+
+<dialog id="setDlg">
+  <div class="tabs"><b>설정</b>
+    <button class="tab on" id="t_basic" onclick="setTab('basic')">기본 설정</button>
+    <button class="tab" id="t_data" onclick="setTab('data')">데이터 파일</button></div>
+  <div id="tab_data" style="display:none">
+    <div class="hint">마부장님이 소스와 설정 파일을 읽어 찾은 <b>데이터 파일 폴더</b>(업로드·영상·이미지·엑셀 등)입니다.
+      [열기]를 누르면 마부장님이 설치된 PC에서 폴더가 열립니다.</div>
+    <div id="dataList"></div>
+    <div id="addForm" style="display:none;margin-top:10px">
+      <label>폴더 경로 (예: storage/uploads 또는 D:\data\uploads — 상대 경로는 작업 폴더 기준)</label><input id="d_path">
+      <label>설명 (선택)</label><input id="d_desc" placeholder="예) 공지 첨부파일 폴더" onkeydown="if(event.key==='Enter'&&!event.isComposing)addData()">
+      <div class="row" style="justify-content:flex-start"><button class="pri" onclick="addData()">등록</button><button onclick="addForm.style.display='none'">취소</button></div>
+    </div>
+    <div class="row" style="justify-content:flex-start"><button id="dataBtn" onclick="analyzeData()">소스 분석하기<span class="free">AI 약 $0.01</span></button>
+      <button onclick="addForm.style.display='';d_path.focus()">직접 등록하기<span class="free">무료</span></button></div>
+  </div>
+  <div id="tab_basic">
+  <label>검증 명령 (빌드 확인 버튼)</label><input id="s_test">
+  <label>실행 전 명령 (DB 켜기 등)</label><input id="s_pre" placeholder="예) docker start my-postgres">
+  <label>실행 전 확인할 포트 (열릴 때까지 대기)</label><input id="s_ports" placeholder="예) 5432  또는  localhost:5432,6379">
+  <label>서버 실행 명령 (서버 실행 버튼)</label><input id="s_run" placeholder="예) gradlew.bat bootRun">
+  <label>실행 확인 주소</label><input id="s_url" placeholder="예) http://localhost:9080/login">
+  <label>배포 명령</label><input id="s_deploy">
+  <label>AI 모델</label>
+  <select id="s_model">
+    <option value="">기본값 (서버 설정)</option>
+    <option value="claude-haiku-5-5">Haiku — 가장 저렴, 단순 수정</option>
+    <option value="claude-sonnet-5-5">Sonnet — 권장, 일반 작업</option>
+    <option value="claude-opus-5-5">Opus — 비쌈, 어려운 작업</option>
+  </select>
+  <label>비밀값 (DB 비밀번호 등 — 값은 다시 표시되지 않음)</label>
+  <div id="envList"></div>
+  <div class="kv" style="margin-top:6px"><input id="e_key" placeholder="이름 (예: DB_PASS)"><input id="e_val" type="password" placeholder="값"><button onclick="addEnv()">추가</button></div>
+  <div class="chk"><input type="checkbox" id="s_push"> 배포 시 원격 저장소에 push</div>
+  <div class="chk"><input type="checkbox" id="s_auto"> 위험도 낮은 작업은 자동 배포</div>
+  <label>개발자 호출 알림 (노션·메일, 값은 서버의 .env에서 설정)</label>
+  <button type="button" onclick="testNotify()">개발자 알림 시험 보내기</button>
+  </div>
+  <div class="row"><button onclick="setDlg.close()">닫기</button><button class="pri" id="saveBtn" onclick="saveSettings()">저장</button></div>
+</dialog>
+
+<dialog id="jobDlg">
+  <div class="tabs"><b id="jd_title">작업 상세</b><button onclick="jobDlg.close()">닫기</button></div>
+  <div id="jd_body"></div>
+  <div class="row" id="jd_acts"></div>
+</dialog>
+
+<dialog id="loginDlg">
+  <b>관리자 로그인</b>
+  <label>비밀번호</label><input id="pw" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+  <div class="row"><button class="pri" onclick="doLogin()">로그인</button></div>
+</dialog>
+
+<script>
+let token = '', cur = null, lastId = 0, lastDay = '', repoCache = [], jobsCache = [];
+const hm = t => new Date(t*1000).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+const ST = {queued:'대기',running:'작업 중',awaiting_approval:'승인 대기',deploying:'배포 중',done:'완료',no_change:'변경 없음',
+  needs_developer:'개발자 호출',rejected:'취소됨',failed:'실패',reverting:'되돌리는 중',reverted:'되돌림',answered:'답변',conflict:'충돌',cloning:'내려받는 중',setting_up:'환경 구성 중',ready:'준비됨',error:'오류'};
+try { token = sessionStorage.getItem('mabu_token') || ''; } catch(e) {}
+
+async function api(path, opt={}) {
+  const r = await fetch(path, {...opt, headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}});
+  if (r.status === 401) { loginDlg.showModal(); throw new Error('auth'); }
+  const data = await r.json().catch(()=>({}));
+  if (!r.ok) { alert(data.detail || '오류가 발생했습니다'); throw new Error(data.detail); }
+  return data;
+}
+async function doLogin() {
+  const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw.value})});
+  if (!r.ok) return alert('비밀번호가 틀렸습니다');
+  token = (await r.json()).token; try{sessionStorage.setItem('mabu_token',token)}catch(e){}
+  loginDlg.close(); loadRepos();
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const logHtml = s => esc(s).split('\n').map(l => /^(CONFLICT|error:|fatal:|FAILURE)|\bERROR\b|BUILD FAILED/.test(l) ? `<span class="err">${l}</span>` : l).join('\n');
+function md(s) {
+  const parts = s.split(/```[a-z-]*\n?([\s\S]*?)```/g);
+  return parts.map((p,i) => i%2 ? `<pre>${logHtml(p)}</pre>` :
+    esc(p).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/^- (.*)$/gm,'• $1')
+      .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, '$1<a class="lnk" href="$2" target="_blank" rel="noopener">$2</a>').replace(/(<a class="lnk"[^>]*>)https?:\/\//g, '$1')
+      .replace(/\[\[open:([^\]\n]+)\]\]\n?/g, (_, p) => `<button class="openf" data-p="${p}" onclick="openFolder(this.dataset.p)" title="마부장님이 설치된 PC에서 폴더를 엽니다 (없으면 만듭니다)">📂 폴더 열기: ${p}</button>`)
+      .replace(/\n/g,'<br>')).join('');
+}
+async function openFolder(p) {
+  const r = await api(`/api/repos/${cur.id}/open-folder`, {method:'POST', body:JSON.stringify({path:p})});
+  if (!r.ok) alert(r.message + '\n' + r.path);
+  else if (r.created) alert('폴더가 없어서 새로 만들고 열었습니다.\n' + r.path);
+}
+const MODE = {question:'질문 모드', simple:'간단한 수정', complex:'일반 작업'};
+const modelName = m => (m||'').includes('haiku') ? 'Haiku' : (m||'').includes('opus') ? 'Opus' : (m||'').includes('sonnet') ? 'Sonnet' : '';
+const badge = s =>`<span class="badge ${s}">${ST[s]||s}</span>`;
+
+async function loadRepos() {
+  repoCache = await api('/api/repos');
+  repos.innerHTML = repoCache.map(r => `<div class="repo ${cur&&cur.id===r.id?'on':''}" onclick="selectRepo(${r.id})" title="${esc(r.git_url)}">
+    <div class="r1"><b>${esc(r.name)}</b><span class="rst ${r.status}">${ST[r.status]||r.status}</span></div><small>${esc(r.base_branch)}</small></div>`).join('')
+    || '<div class="empty">등록된 저장소가 없습니다</div>';
+  if (cur) { const r = repoCache.find(x=>x.id===cur.id); if (r) { cur = {...cur, ...r}; renderHeader();
+    if (setDlg.open && tab_data.style.display !== 'none') renderData(); } }
+}
+function renderHeader() {
+  title.textContent = cur.name; hstatus.innerHTML = badge(cur.status);
+  sub.innerHTML = `<span class="u">${esc(cur.git_url.replace(/^https?:\/\//,'').replace(/\.git$/,''))}</span><i>·</i><span>기준 브랜치 <b>${esc(cur.base_branch)}</b></span>`;
+  hbtns.style.display = ''; sendBtn.disabled = cur.status !== 'ready';
+  cost.innerHTML = `AI 사용 누적 <b>$${(cur.total_cost_usd||0).toFixed(2)}</b>`;
+  const run = cur.server && cur.server.running;
+  const pv = run && cur.server.preview;
+  runBtn.innerHTML = (pv ? `미리 보기(#${pv}) 중지` : run ? '서버 중지' : '서버 실행') + '<span class="free">무료</span>';
+  runBtn.className = run ? 'danger' : '';
+}
+function toggleDrawer(c) { app.classList.remove(c==='side'?'showjobs':'side'); app.classList.toggle(c); }
+function closeDrawers() { app.classList.remove('side','showjobs'); }
+async function selectRepo(id) {
+  closeDrawers();
+  cur = await api('/api/repos/'+id); lastId = 0; lastDay = ''; log.innerHTML = ''; renderHeader(); loadRepos(); poll(true);
+}
+// 서버 메시지 문구는 그대로 두고, 화면에서 제목·본문·로그로 나눠 보여 준다
+const LEAD = /^(?:✅|❌|⚠️|🚀|ℹ️|🙋|📋|↩️)\s*/;
+const OWNER_CMD = /^#\d+ (배포 승인|되돌리기|변경 취소)$/;
+const stamp = m => (m.job_id ? `#${m.job_id} · ` : '') + hm(m.created_at);
+function cardParts(m) {
+  const c = m.content.replace(LEAD, ''), nl = c.indexOf('\n');
+  let head = nl < 0 ? c : c.slice(0, nl), rest = nl < 0 ? '' : c.slice(nl+1).replace(/^\n+/, ''), ref = '';
+  const code = head.match(/실행할 코드\((.+?)\)/), cut = head.indexOf(' — '), sent = head.match(/^(.+?[.!]) (.+)$/);
+  if (code) { head = '코드를 준비하지 못했습니다'; ref = code[1]; }
+  else if (cut > 0) {
+    const detail = head.slice(cut+3), http = m.role === 'action_ok' && detail.match(/응답 \d+/);
+    head = head.slice(0, cut) + (http ? ` · ${http[0]}` : '');
+    if (!http) rest = detail + '\n' + rest;
+  } else if (sent) { head = sent[1]; rest = sent[2] + '\n' + rest; }
+  return {head: esc(head.replace(/\.$/, '')), rest: rest.trim(), ref};
+}
+function msgHtml(m, alert) {
+  if (alert) {
+    const {head, rest} = cardParts(m);
+    const logOnly = /^```[a-z-]*\n?[\s\S]*```$/.test(rest) && rest.split('```').length === 3;   // 로그만 있으면 카드에 꽉 차게
+    return `<div class="chead"><span class="bang">!</span><span>${head.replace(/^#\d+\s+/, '')}</span><span class="tm">${stamp(m)}</span></div>`
+      + (rest ? (logOnly ? md(rest) : `<div class="cbody">${md(rest)}</div>`) : '');
+  }
+  if (m.role === 'action_ok') {
+    const {head, rest} = cardParts(m);
+    return `<div class="chead"><span class="chk-i">✓</span>${head}</div><div class="body">${md(rest)}</div><div class="tm">${stamp(m)}</div>`;
+  }
+  if (m.role === 'action_fail') {
+    const {head, rest, ref} = cardParts(m);
+    return `<div class="chead"><span class="bang">!</span>${head}${ref ? `<span class="ref">${esc(ref)}</span>` : ''}</div>`
+      + (rest ? `<div class="body">${md(rest)}</div>` : '')
+      + `<div class="ask"><button onclick="askFix()">마부장님께 원인 분석·수정 요청</button><span class="cst">AI 비용 발생</span><span class="tm">${stamp(m)}</span></div>`;
+  }
+  if (m.role === 'mabu') {
+    const t = m.content.match(/^(?:✅|ℹ️|🙋|📋|🚀|↩️)\s*(?:\*\*(.+?)\*\*|(.+?))\s*(?:\n+|$)/);
+    return `<div class="who">마부장님</div>` + (t ? `<div class="ttl">${esc(t[1] || t[2])}</div>` : '')
+      + `<div class="body">${md(t ? m.content.slice(t[0].length) : m.content)}</div><div class="tm">${stamp(m)}</div>`;
+  }
+  if (m.role === 'system') {
+    const text = m.content.replace(/^▶️/, '▶').replace(/…?\s*`([^`]+)`/, ' · $1');
+    return `${md(text)} · ${stamp(m)}`;
+  }
+  return `<div>${md(m.content)}</div><div class="tm">${OWNER_CMD.test(m.content) ? hm(m.created_at) : stamp(m)}</div>`;
+}
+function msgClass(m, alert) {
+  if (alert) return 'msg alert' + (m.content.startsWith('⚠️') ? ' warn' : '');
+  if (m.role === 'system' && /^(▶️|⏹|🔨|🔧|✔️|👀|🐳)/.test(m.content)) return 'msg system pill';
+  return 'msg ' + m.role + (m.role === 'owner' && OWNER_CMD.test(m.content) ? ' cmd' : '');
+}
+function renderMsgs(ms) {
+  for (const m of ms) {
+    lastId = Math.max(lastId, m.id);
+    // 날짜가 바뀌면 구분선
+    const day = new Date(m.created_at*1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+    if (day !== lastDay) { lastDay = day; const dv = document.createElement('div'); dv.className = 'day'; dv.textContent = day; log.appendChild(dv); }
+    if (m.role === 'progress') {
+      let box = document.getElementById('prog-'+m.job_id);
+      if (!box) { box = document.createElement('details'); box.className='prog'; box.id='prog-'+m.job_id;
+        box.innerHTML = `<summary>작업 과정 보기 (#${m.job_id})</summary>`; log.appendChild(box); }
+      const d = document.createElement('div'); d.textContent = `${hm(m.created_at)}  ${m.content}`; box.appendChild(d);
+      box.querySelector('summary').textContent = `작업 과정 보기 (#${m.job_id}) · ${box.children.length-1}단계`;
+      continue;
+    }
+    settleTab(m);
+    const alert = m.role === 'system' && /^(❌|⚠️)/.test(m.content);
+    const el = document.createElement('div'); el.className = msgClass(m, alert); if (m.job_id) el.dataset.job = m.job_id;
+    el.innerHTML = msgHtml(m, alert);
+    log.appendChild(el);
+  }
+  if (ms.length) log.scrollTop = log.scrollHeight;
+}
+function jobActs(j) {
+  const h = (j.diff_stat?`<button onclick="openJob(${j.id},'files')">변경 파일</button>`:'')
+    + (j.deploy_log&&j.status!=='done'?`<button onclick="openJob(${j.id},'log')">배포 로그</button>`:'')
+    + (j.status==='awaiting_approval'?`<button onclick="act(${j.id},'preview')" title="승인 전에 이 변경을 반영한 코드로 서버를 띄워 확인합니다 (AI 비용 없음)">👀 미리 보기</button><button class="pri" onclick="act(${j.id},'approve')">배포 승인</button><button class="danger" onclick="act(${j.id},'reject')">취소</button>`:'')
+    + (j.can_revert?`<button class="danger" onclick="act(${j.id},'revert')">↩ 되돌리기</button>`:'')
+    + (j.status==='conflict'?`<button class="danger" onclick="act(${j.id},'reject')" title="다른 작업과 겹쳐 배포하지 못한 변경을 버립니다">취소</button>`:'');
+  return h ? `<div class="acts">${h}</div>` : '';
+}
+async function renderJobs() {
+  const js = await api(`/api/repos/${cur.id}/jobs`);
+  renderQuick(js);
+  jobsCache = js;
+  jobCount.textContent = `${js.length}건`;
+  jobs.innerHTML = js.map(j => `<div class="job" onclick="if(!event.target.closest('button'))openJob(${j.id})"><div class="h"><span class="id">#${j.id}</span>${badge(j.status)}${j.kind==='setup'?'<span class="kind">환경 구성</span>':''}<button class="kebab" onclick="openJob(${j.id})" title="상세 보기">⋯</button></div>
+    <div class="req">${esc(j.report?.title || j.request)}</div>
+    <div class="meta"><b>${fmtShort(j.created_at)}</b><span>${[(MODE[j.mode]||'').replace(' 모드',''), modelName(j.model), j.cost_usd?`$${j.cost_usd.toFixed(3)}`:''].filter(Boolean).join(' · ')}</span></div>
+    ${jobActs(j)}
+    </div>`).join('') || '<div class="empty">아직 작업이 없습니다</div>';
+}
+function renderQuick(js) {
+  // 채팅 화면에서 바로 누를 수 있는 버튼 (작업 현황 패널이 숨겨진 좁은 화면 대비)
+  const t = j => esc((j.report?.title || j.request).slice(0, 30));
+  quick.innerHTML = js.filter(j => j.status==='awaiting_approval').map(j =>
+      `<div class="chip"><span><b>#${j.id}</b> ${t(j)}</span><button onclick="act(${j.id},'preview')" title="승인 전에 이 변경을 반영한 코드로 서버를 띄워 확인합니다 (AI 비용 없음)">👀 미리 보기</button><button class="pri" onclick="act(${j.id},'approve')">배포 승인</button><button class="danger" onclick="act(${j.id},'reject')">취소</button></div>`).join('')
+    + js.filter(j => j.status==='conflict').map(j =>
+      `<div class="chip bad"><span>#${j.id} 충돌로 배포 못 함</span><button class="danger" onclick="act(${j.id},'reject')">취소</button></div>`).join('')
+    + js.filter(j => j.can_revert).map(j =>
+      `<div class="chip"><span>직전 배포 <b>#${j.id}</b> ${t(j)}</span><button onclick="act(${j.id},'revert')">↩ 되돌리기</button></div>`).join('');
+}
+async function poll(force) {
+  if (!cur) return;
+  const id = cur.id;
+  const ms = await api(`/api/repos/${id}/messages?after=${lastId}`);
+  if (cur.id !== id) return;
+  renderMsgs(ms);
+  if (ms.length || force) { await renderJobs(); await loadRepos(); }
+}
+async function send(attach=false) {
+  const t = input.value.trim(); if (!t || !cur) return;
+  input.value = ''; await api(`/api/repos/${cur.id}/chat`, {method:'POST', body:JSON.stringify({message:t, attach_log:attach})}); poll(true);
+}
+async function action(name) { await api(`/api/repos/${cur.id}/actions/${name}`, {method:'POST'}); setTimeout(()=>poll(true), 500); }
+function toggleRun() {
+  if (cur.server && cur.server.running) return action('stop');
+  withTab('서버를 실행하는 중입니다', () => action('start'));
+}
+// 서버 실행·미리 보기: 클릭 순간 새 탭을 열어 두고(팝업 차단 방지) 준비되면 그 탭을 서비스 주소로 옮긴다
+let pendingTab = null;
+async function withTab(title, run) {
+  const w = cur.run_url ? window.open('', '_blank') : null;
+  if (w) {
+    w.document.title = '마부장님 — 준비 중';
+    w.document.body.innerHTML = `<div style="font-family:sans-serif;padding:40px;color:#555">⏳ ${title}…<br><small>준비되면 이 창이 자동으로 서비스 화면으로 바뀝니다. (보통 10~60초)</small></div>`;
+    pendingTab = {w, since: lastId};
+  }
+  try { await run(); } catch (e) { if (w) w.close(); pendingTab = null; }
+}
+function settleTab(m) {
+  if (!pendingTab || m.id <= pendingTab.since || pendingTab.w.closed) return;
+  const ok = m.role === 'action_ok' && /서버 실행됨|미리 보기 실행됨/.test(m.content);
+  if (!ok && m.role !== 'action_fail') return;
+  const w = pendingTab.w; pendingTab = null;
+  if (ok) w.location.href = (m.content.match(/접속: (\S+)/) || [])[1] || cur.run_url;
+  else w.document.body.innerHTML = '<div style="font-family:sans-serif;padding:40px;color:#a2461f">❌ 서버 실행에 실패했습니다. 마부장님 화면에서 원인을 확인해 주세요.</div>';
+}
+function askFix() {
+  if (!confirm('마부장님(AI)에게 실패 로그를 보내 원인을 찾고 고치게 할까요? AI 비용이 발생합니다.')) return;
+  input.value = `방금 [${cur.last_action||'실행'}]이 실패했어요. 로그를 보고 원인을 찾아 고쳐주세요. 코드 문제가 아니면 무엇이 필요한지 알려주세요.`;
+  send(true);
+}
+async function act(jid, a) {
+  if (a==='approve' && !confirm('이 변경을 실제 서비스에 배포할까요?')) return;
+  if (a==='revert' && !confirm('직전에 배포한 이 변경을 취소하고 이전 상태로 되돌릴까요? (AI 비용 없음)')) return;
+  if (a==='preview') {
+    if (cur.server && cur.server.running && cur.server.preview === jid) { if (cur.run_url) window.open(cur.run_url, '_blank'); return; }
+    return withTab(`#${jid} 미리 보기를 실행하는 중입니다`, async () => { await api(`/api/jobs/${jid}/preview`, {method:'POST'}); poll(true); });
+  }
+  await api(`/api/jobs/${jid}/${a}`, {method:'POST'}); poll(true);
+}
+// ---------- 작업 상세 (⋮) ----------
+const fmtTime = t => t ? new Date(t*1000).toLocaleString('ko-KR', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+const fmtShort = t => { if (!t) return ''; const d = new Date(t*1000); return `${d.getMonth()+1}.${d.getDate()} ${hm(t)}`; };
+const RISK = {low:'낮음', medium:'보통', high:'높음'};
+function diffHtml(text) {
+  return text.split('\n').map(l => {
+    const c = l.startsWith('diff --git') ? 'f' : l.startsWith('@@') ? 'h' : (l.startsWith('+') && !l.startsWith('+++')) ? 'a'
+      : (l.startsWith('-') && !l.startsWith('---')) ? 'd' : '';
+    return `<div class="${c}">${esc(l) || ' '}</div>`;
+  }).join('');
+}
+async function openJob(id, section) {
+  const j = jobsCache.find(x => x.id === id) || await api(`/api/jobs/${id}`);
+  const r = j.report || {};
+  jd_title.innerHTML = `#${j.id} 작업 상세 ${badge(j.status)}`;
+  const rows = [['요청', esc(j.request)], ['처리 방식', [MODE[j.mode], modelName(j.model)].filter(Boolean).join(' · ') || '-'],
+    ['AI 비용', j.cost_usd ? `$${j.cost_usd.toFixed(4)}` : '없음'], ['요청 시각', fmtTime(j.created_at)], ['마지막 변경', fmtTime(j.updated_at)],
+    ...(j.branch ? [['작업 브랜치', `<code>${esc(j.branch)}</code>`]] : []),
+    ...(r.risk ? [['위험도', RISK[r.risk] || esc(r.risk)]] : [])];
+  let h = `<div class="kv2">${rows.map(([k,v]) => `<span>${k}</span><div>${v}</div>`).join('')}</div>`;
+  if (r.title || r.summary_for_owner) h += `<div class="sec2">마부장님 보고 — ${esc(r.title||'')}</div><div style="font-size:13px">${md(r.summary_for_owner||'')}</div>`;
+  if ((r.changes||[]).length) h += `<div class="sec2">변경 내용</div><div style="font-size:13px">${r.changes.map(c => '• ' + esc(c)).join('<br>')}</div>`;
+  if (r.tests) h += `<div class="sec2">검증</div><div style="font-size:13px">${md(r.tests)}</div>`;
+  if (j.dev_note || r.developer_note) h += `<div class="sec2">개발자 전달 사항</div><pre>${esc(j.dev_note || r.developer_note)}</pre>`;
+  if (j.notion_url) h += `<div style="font-size:13px;margin-top:6px"><a href="${esc(j.notion_url)}" target="_blank" rel="noopener">노션에서 보기</a></div>`;
+  if (j.diff_stat) h += `<div class="sec2" id="jd_files">변경 파일</div><pre>${esc(j.diff_stat)}</pre><div class="sec2">변경 코드</div><div id="jd_diff" class="diff">불러오는 중…</div>`;
+  if (j.deploy_log) h += `<details id="jd_log"><summary class="sec2" style="cursor:pointer">배포 로그</summary><pre>${esc(j.deploy_log)}</pre></details>`;
+  jd_body.innerHTML = h;
+  const b = (a, label, cls='') => `<button class="${cls}" onclick="jobDlg.close();act(${j.id},'${a}')">${label}</button>`;
+  jd_acts.innerHTML = `<button onclick="jobDlg.close();findInChat(${j.id})">채팅에서 보기</button>`
+    + (j.status === 'awaiting_approval' ? b('preview','👀 미리 보기') + b('reject','취소','danger') + b('approve','배포 승인','pri') : '')
+    + (j.status === 'conflict' ? b('reject','취소','danger') : '')
+    + (j.can_revert ? b('revert','↩ 되돌리기','danger') : '');
+  if (!jobDlg.open) jobDlg.showModal();
+  const go = () => { const e = section && document.getElementById('jd_'+section); if (e) { if (e.tagName === 'DETAILS') e.open = true; e.scrollIntoView({block:'start'}); } };
+  go();
+  if (j.diff_stat) {
+    // 상세 창 안에서만 안내 (알림창 없이)
+    const box = () => document.getElementById('jd_diff');
+    try {
+      const r = await fetch(`/api/jobs/${id}/diff`, {headers:{Authorization:'Bearer '+token}});
+      if (!r.ok) throw new Error(r.status === 404 ? '변경 코드를 불러오지 못했습니다. 마부장님 서버를 재시작하면 볼 수 있습니다.' : `변경 코드를 불러오지 못했습니다 (${r.status})`);
+      const d = await r.json();
+      if (box()) box().innerHTML = (d.note ? `<div class="h">${esc(d.note)}</div>` : '') + (d.diff ? diffHtml(d.diff) : '');
+      go();
+    } catch (e) { if (box()) box().innerHTML = `<div class="h">${esc(e.message)}</div>`; }
+  }
+}
+function findInChat(id) {
+  closeDrawers();
+  const prog = document.getElementById('prog-' + id);
+  const el = prog || [...log.querySelectorAll('.msg')].find(e => e.dataset.job == id);
+  if (el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.style.outline = '2px solid var(--acc)'; setTimeout(() => el.style.outline = '', 2000); }
+}
+function openNew(){ newDlg.showModal(); }
+async function createRepo() {
+  const body = {name:n_name.value.trim(), git_url:n_url.value.trim(), base_branch:n_branch.value.trim()||'main',
+    test_cmd:n_test.value.trim(), deploy_cmd:n_deploy.value.trim(), run_cmd:n_run.value.trim(), run_url:n_url2.value.trim(), pre_run_cmd:n_pre.value.trim(), wait_ports:n_ports.value.trim(), push_on_deploy:n_push.checked, auto_deploy:n_auto.checked};
+  if (!body.name || !body.git_url) return alert('이름과 Git 주소를 입력하세요');
+  const r = await api('/api/repos', {method:'POST', body:JSON.stringify(body)}); newDlg.close(); selectRepo(r.id);
+}
+function renderEnv(){
+  envList.innerHTML = (cur.env_keys||[]).map(k=>`<div class="envrow"><span>${esc(k)} = ••••••</span><button class="danger" onclick="delEnv('${esc(k)}')">삭제</button></div>`).join('')
+    || '<div style="font-size:12px;color:var(--mute)">등록된 비밀값이 없습니다</div>';
+}
+function openSettings(){ s_test.value=cur.test_cmd||''; s_run.value=cur.run_cmd||''; s_pre.value=cur.pre_run_cmd||''; s_ports.value=cur.wait_ports||''; s_url.value=cur.run_url||''; s_deploy.value=cur.deploy_cmd||'';
+  s_model.value=cur.model||''; s_push.checked=!!cur.push_on_deploy; s_auto.checked=!!cur.auto_deploy; renderEnv(); setTab('basic'); setDlg.showModal(); }
+function setTab(t){
+  tab_basic.style.display = t==='basic' ? '' : 'none'; tab_data.style.display = t==='data' ? '' : 'none';
+  t_basic.classList.toggle('on', t==='basic'); t_data.classList.toggle('on', t==='data');
+  saveBtn.style.display = t==='basic' ? '' : 'none';
+  if (t==='data') renderData();
+}
+function renderData(){
+  const ds = cur.data_dirs || [], busy = cur.data_status === 'analyzing';
+  dataList.innerHTML = busy ? '<div class="empty">소스를 분석하는 중입니다… (1분 정도 걸릴 수 있습니다)</div>'
+    : ds.map((d,i)=>`<div class="drow"><div style="min-width:0">
+        <div class="p">${esc(d.path)} <span class="badge ${d.exists?'yes':'no'}">${d.exists?'있음':'아직 없음'}</span></div>
+        ${d.desc?`<div class="d">${esc(d.desc)}</div>`:''}
+        <small>${esc([d.source, d.profile].filter(Boolean).join(' · '))}</small>
+        ${d.abs?`<small>${esc(d.abs)}${d.inside?'':' (작업 폴더 밖)'}</small>`:''}</div>
+      <div class="dacts"><button ${d.openable?'':'disabled'} onclick="openData(${i})" title="${d.openable?'이 PC에서 폴더를 엽니다':'폴더가 없거나 열 수 없는 경로입니다'}">${d.exists?'열기':d.openable?'만들고 열기':'열 수 없음'}</button>
+        <button class="danger" onclick="delData(${i})" title="목록에서만 지웁니다 (폴더와 파일은 그대로)">삭제</button></div></div>`).join('')
+    || `<div class="empty">${cur.data_status==='failed'?'분석에 실패했습니다. 다시 시도해 주세요.':cur.data_status==='done'?'데이터 파일 폴더를 찾지 못했습니다.':'아직 분석하지 않았습니다. 아래 [소스 분석하기]를 눌러 주세요.'}</div>`;
+  dataBtn.disabled = busy;
+  dataBtn.firstChild.textContent = ds.length ? '다시 분석하기' : '소스 분석하기';
+}
+async function analyzeData(){
+  await api(`/api/repos/${cur.id}/data-dirs/analyze`, {method:'POST'});
+  cur.data_status = 'analyzing'; renderData();
+}
+async function addData(){
+  cur = {...cur, ...await api(`/api/repos/${cur.id}/data-dirs`, {method:'POST', body:JSON.stringify({path:d_path.value, desc:d_desc.value})})};
+  d_path.value = ''; d_desc.value = ''; addForm.style.display = 'none'; renderData();
+}
+async function delData(i){
+  const d = cur.data_dirs[i];
+  if (!confirm(`목록에서 삭제할까요?\n${d.path}\n\n폴더와 안의 파일은 지워지지 않습니다.` + (d.manual ? '' : '\n다시 분석해도 이 항목은 나오지 않습니다.'))) return;
+  cur = {...cur, ...await api(`/api/repos/${cur.id}/data-dirs/${i}`, {method:'DELETE'})}; renderData();
+}
+async function openData(i){
+  const r = await api(`/api/repos/${cur.id}/data-dirs/${i}/open`, {method:'POST'});
+  if (!r.ok) alert(r.message + '\n' + r.path);
+  else if (r.created) alert('폴더가 없어서 새로 만들고 열었습니다.\n' + r.path);
+  await loadRepos();
+}
+async function testNotify(){
+  if (!confirm('설정된 노션·메일로 시험 알림을 보낼까요? 결과는 채팅에 표시됩니다.')) return;
+  await api(`/api/repos/${cur.id}/notify-test`, {method:'POST'}); setDlg.close(); setTimeout(()=>poll(true), 1000);
+}
+async function addEnv(){
+  const k=e_key.value.trim(); if(!k) return;
+  cur = await api('/api/repos/'+cur.id, {method:'PATCH', body:JSON.stringify({env_set:{[k]:e_val.value}})});
+  e_key.value=''; e_val.value=''; renderEnv();
+}
+async function delEnv(k){ cur = await api('/api/repos/'+cur.id, {method:'PATCH', body:JSON.stringify({env_remove:[k]})}); renderEnv(); }
+async function saveSettings(){
+  cur = await api('/api/repos/'+cur.id, {method:'PATCH', body:JSON.stringify({test_cmd:s_test.value, run_cmd:s_run.value, pre_run_cmd:s_pre.value, wait_ports:s_ports.value, run_url:s_url.value,
+    deploy_cmd:s_deploy.value, model:s_model.value, push_on_deploy:s_push.checked, auto_deploy:s_auto.checked})});
+  setDlg.close(); renderHeader();
+}
+setInterval(()=>poll(false).catch(()=>{}), 2000);
+loadRepos().then(()=>{ if (!cur && matchMedia('(max-width:980px)').matches) app.classList.add('side'); }).catch(()=>{});
+</script>
+</body>
+</html>

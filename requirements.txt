@@ -1,0 +1,4 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+claude-agent-sdk>=0.2.170
+anthropic>=2.0

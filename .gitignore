@@ -1,0 +1,11 @@
+# 비밀값
+.env
+
+# 실행 데이터 (DB, 작업 폴더 clone)
+data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

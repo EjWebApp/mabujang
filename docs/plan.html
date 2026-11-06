@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마부장AI 서비스 기획서</title>
+<style>
+  :root { --bg:#fafaf8; --fg:#1d1d1b; --mut:#6b6b66; --line:#dcdcd6; --card:#fff; --acc:#2f6fd6; --soft:#eef3fc; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ececea; --mut:#a0a09a; --line:#3a3a37; --card:#1f1f1d; --acc:#7aa7f0; --soft:#1e2838; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:40px 20px 80px; }
+  h1 { font-size:30px; margin:0 0 6px; }
+  h2 { font-size:21px; margin:48px 0 14px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  .lead { font-size:18px; color:var(--mut); margin:0; }
+  .meta { font-size:13px; color:var(--mut); margin-top:10px; }
+  .pitch { background:var(--soft); border-radius:10px; padding:18px 20px; margin-top:24px; }
+  .pitch b { color:var(--acc); }
+  .flow { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; counter-reset:s; }
+  .flow div { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 12px; font-size:14px; }
+  .flow div::before { counter-increment:s; content:counter(s); display:inline-block; width:24px; height:24px; line-height:24px; text-align:center; border-radius:50%; background:var(--acc); color:#fff; font-weight:700; font-size:13px; margin-bottom:6px; }
+  .flow b { display:block; font-size:15px; }
+  figure { margin:0; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  figure svg { width:100%; height:auto; display:block; color:var(--fg); }
+  figcaption { font-size:14px; color:var(--mut); margin-top:10px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h3 { margin:0 0 6px; font-size:16px; }
+  .card ul { margin:0; padding-left:18px; font-size:14.5px; }
+  .tag { display:inline-block; font-size:12px; padding:1px 8px; border-radius:10px; background:var(--soft); color:var(--acc); margin-left:6px; vertical-align:middle; }
+  table { width:100%; border-collapse:collapse; font-size:14.5px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mut); font-weight:600; }
+  .shot { padding:10px; margin-bottom:12px; }
+  .shot img { width:100%; display:block; border-radius:6px; border:1px solid var(--line); }
+  .shots { margin-bottom:0; }
+  .shots .shot { margin-bottom:12px; }
+  .mob { grid-template-columns:2.6fr 1fr; align-items:start; }
+  .done { color:#2e8b57; font-weight:600; }
+  .todo { color:var(--mut); }
+  @media (max-width:720px) { .flow { grid-template-columns:1fr; } .grid { grid-template-columns:1fr; } h1 { font-size:25px; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>마부장AI</h1>
+<p class="lead">채팅으로 말하면 AI가 내 웹서비스를 고쳐 주는 유지보수 서비스</p>
+<p class="meta">서비스 기획서 · 2026-11-01</p>
+
+<div class="pitch">
+  <b>문제</b> 웹서비스 소스는 있는데 개발자가 없다. 글자 하나 바꾸는 데도 외주를 맡기고 며칠을 기다린다.<br>
+  <b>해결</b> "로그인 화면의 ID를 '아이디'로 바꿔 줘"라고 채팅하면, AI가 고치고 검증한 뒤 관리자가 승인하면 바로 반영된다.
+</div>
+
+<h2>사용 흐름</h2>
+<div class="flow">
+  <div><b>저장소 등록</b>Git 주소를 넣는다</div>
+  <div><b>환경 구성</b>AI가 소스를 내려받고 실행 방법을 익힌다</div>
+  <div><b>채팅 요청</b>원하는 변경을 말로 적는다</div>
+  <div><b>수정·검증</b>AI가 별도 브랜치에서 고치고 시스템이 다시 확인한다</div>
+  <div><b>승인·배포</b>관리자가 미리 보고 [배포 승인]을 누른다</div>
+</div>
+<p style="font-size:14px;color:var(--mut)">위험하거나 실패하면 AI가 "개발자 호출"로 넘기고, 작업 내용은 버리지 않고 보관한다.</p>
+
+<h2>시스템 구성도</h2>
+<figure>
+<svg viewBox="0 0 960 410" role="img" aria-label="사용자는 브라우저로 마부장AI 서버에 접속한다. 서버 안에서 AI 작업자가 작업 폴더의 코드를 고치고, 승인 후 GitHub에 push하며, 버튼 작업이 웹서비스를 실행한다.">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-size="13" fill="currentColor" text-anchor="middle">
+    <!-- user -->
+    <rect x="20" y="165" width="150" height="80" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <text x="95" y="200" font-weight="700">관리자</text>
+    <text x="95" y="220" font-size="11.5" opacity=".7">PC · 휴대폰 브라우저</text>
+
+    <!-- server container -->
+    <rect x="200" y="20" width="520" height="375" rx="14" fill="none" stroke="#2f6fd6" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="460" y="44" font-weight="700" fill="#2f6fd6">마부장AI 서버 (회사 PC 또는 서버 1대)</text>
+
+    <rect x="230" y="65" width="200" height="65" rx="8" fill="none" stroke="currentColor"/>
+    <text x="330" y="93" font-weight="700">채팅 화면 + API</text>
+    <text x="330" y="113" font-size="11.5" opacity=".7">FastAPI · 기록은 SQLite</text>
+
+    <rect x="490" y="65" width="200" height="65" rx="8" fill="none" stroke="currentColor"/>
+    <text x="590" y="93" font-weight="700">작업 관리</text>
+    <text x="590" y="113" font-size="11.5" opacity=".7">승인 · 배포 · 되돌리기</text>
+
+    <rect x="230" y="180" width="200" height="65" rx="8" fill="none" stroke="currentColor"/>
+    <text x="330" y="208" font-weight="700">버튼 작업 (AI 없음)</text>
+    <text x="330" y="228" font-size="11.5" opacity=".7">빌드 · 서버 실행 · 중지</text>
+
+    <rect x="490" y="180" width="200" height="65" rx="8" fill="#2f6fd6" fill-opacity=".1" stroke="#2f6fd6" stroke-width="1.5"/>
+    <text x="590" y="208" font-weight="700">AI 작업자</text>
+    <text x="590" y="228" font-size="11.5" opacity=".7">Claude Code · 폴더 밖 접근 차단</text>
+
+    <rect x="230" y="300" width="200" height="70" rx="8" fill="none" stroke="currentColor"/>
+    <text x="330" y="330" font-weight="700">실행 중인 웹서비스</text>
+    <text x="330" y="350" font-size="11.5" opacity=".7">미리 보기 · DB(도커)</text>
+
+    <rect x="490" y="300" width="200" height="70" rx="8" fill="none" stroke="currentColor"/>
+    <text x="590" y="330" font-weight="700">작업 폴더</text>
+    <text x="590" y="350" font-size="11.5" opacity=".7">소스 사본 · 작업 브랜치</text>
+
+    <!-- external -->
+    <rect x="780" y="65" width="160" height="65" rx="8" fill="none" stroke="currentColor" stroke-dasharray="3 3"/>
+    <text x="860" y="93" font-weight="700">Slack · Discord</text>
+    <text x="860" y="113" font-size="11.5" opacity=".7">개발자 알림</text>
+
+    <rect x="780" y="180" width="160" height="65" rx="8" fill="none" stroke="currentColor" stroke-dasharray="3 3"/>
+    <text x="860" y="208" font-weight="700">Anthropic API</text>
+    <text x="860" y="228" font-size="11.5" opacity=".7">Sonnet · Haiku · Opus</text>
+
+    <rect x="780" y="300" width="160" height="70" rx="8" fill="none" stroke="currentColor" stroke-dasharray="3 3"/>
+    <text x="860" y="330" font-weight="700">GitHub</text>
+    <text x="860" y="350" font-size="11.5" opacity=".7">원본 저장소</text>
+  </g>
+
+  <g stroke="currentColor" stroke-width="1.3" fill="none" marker-end="url(#ar)">
+    <path d="M170,190 L228,110"/>
+    <line x1="430" y1="97" x2="488" y2="97"/>
+    <line x1="590" y1="130" x2="590" y2="178"/>
+    <line x1="330" y1="130" x2="330" y2="178"/>
+    <line x1="590" y1="245" x2="590" y2="298"/>
+    <line x1="330" y1="245" x2="330" y2="298"/>
+    <line x1="490" y1="335" x2="432" y2="335"/>
+    <line x1="690" y1="97" x2="778" y2="97"/>
+    <line x1="690" y1="212" x2="778" y2="212"/>
+    <line x1="690" y1="335" x2="778" y2="335"/>
+  </g>
+  <g font-size="11.5" fill="currentColor" opacity=".8" text-anchor="middle">
+    <text x="178" y="140">채팅·승인</text>
+    <text x="459" y="90">요청</text>
+    <text x="620" y="158">수정 지시</text>
+    <text x="300" y="158">실행</text>
+    <text x="625" y="276">코드 수정</text>
+    <text x="300" y="276">빌드·실행</text>
+    <text x="461" y="328">소스</text>
+    <text x="734" y="90">위험·실패</text>
+    <text x="734" y="205">AI 호출</text>
+    <text x="734" y="328">승인 후 push</text>
+  </g>
+</svg>
+<figcaption>모든 작업은 마부장AI 서버 안에서 일어난다. AI는 작업 폴더 안에서만 코드를 고치고, GitHub에 반영(push)하는 일은 관리자가 승인한 뒤 시스템이 한다.</figcaption>
+</figure>
+
+<h2>주요 기능</h2>
+<div class="grid">
+  <div class="card"><h3>💬 채팅으로 수정 요청</h3><ul>
+    <li>말로 요청하면 AI가 코드를 고친다</li>
+    <li>결과를 쉬운 한국어로 보고한다</li>
+    <li>최근 대화를 기억해 "더 자세히" 같은 후속 요청도 이해한다</li></ul></div>
+  <div class="card"><h3>✅ 승인 후 배포</h3><ul>
+    <li>[미리 보기]로 바뀐 화면을 먼저 확인</li>
+    <li>[배포 승인] → 병합 · push · 배포 명령</li>
+    <li>[취소] 배포 전 버리기, [되돌리기] 배포 후 원래대로</li></ul></div>
+  <div class="card"><h3>▶ 버튼 작업 <span class="tag">무료</span></h3><ul>
+    <li>빌드 · 서버 실행 · 중지를 AI 없이 처리</li>
+    <li>실행 전 명령(예: DB 켜기)과 포트 확인</li>
+    <li>실패하면 [원인 분석 요청]으로 AI에게 로그 전달</li></ul></div>
+  <div class="card"><h3>🧠 자동 분류 <span class="tag">비용 절감</span></h3><ul>
+    <li>질문 → 가벼운 AI가 코드만 읽고 답변 (약 2원)</li>
+    <li>간단한 수정 → 가벼운 모델(Haiku)</li>
+    <li>복잡한 수정 → 기본 모델(Sonnet)</li></ul></div>
+  <div class="card"><h3>📂 데이터 파일 관리</h3><ul>
+    <li>AI가 설정을 읽어 업로드·저장 폴더를 찾아 준다</li>
+    <li>[폴더 열기]로 서버 PC에서 바로 열기</li>
+    <li>직접 등록 · 삭제 가능</li></ul></div>
+  <div class="card"><h3>📋 작업 현황</h3><ul>
+    <li>작업별 상태 · 처리 방식 · 비용 표시</li>
+    <li>상세 창에서 바뀐 코드(diff)와 배포 로그 확인</li>
+    <li>휴대폰 화면 지원</li></ul></div>
+</div>
+
+<h2>실제 화면</h2>
+<figure class="shot"><img src="img/1_main.png" alt="메인 화면">
+<figcaption><b>메인 화면</b> 왼쪽은 저장소, 가운데는 채팅, 오른쪽은 작업 현황입니다. 입력창 위 버튼으로 미리 보기, 배포 승인, 취소, 되돌리기를 바로 누릅니다.</figcaption></figure>
+<div class="grid shots">
+  <figure class="shot"><img src="img/2_job.png" alt="작업 상세">
+  <figcaption><b>작업 상세</b> 요청, 비용, AI 보고, 바뀐 코드를 한눈에 봅니다.</figcaption></figure>
+  <figure class="shot"><img src="img/3_settings.png" alt="설정">
+  <figcaption><b>설정</b> 실행 명령, 확인할 포트, 비밀값(값은 가림), AI 모델을 정합니다.</figcaption></figure>
+</div>
+<div class="grid shots mob">
+  <figure class="shot"><img src="img/4_data.png" alt="데이터 파일">
+  <figcaption><b>데이터 파일</b> AI가 찾아 준 업로드·영상 폴더 목록입니다. [열기]를 누르면 서버 PC에서 폴더가 열립니다.</figcaption></figure>
+  <figure class="shot"><img src="img/5_mobile.png" alt="휴대폰 화면">
+  <figcaption><b>휴대폰</b> 이동 중에도 승인할 수 있습니다.</figcaption></figure>
+</div>
+
+<h2>안전장치</h2>
+<table>
+  <tr><th style="width:30%">위험</th><th>막는 방법</th></tr>
+  <tr><td>AI가 잘못 고쳐서 바로 반영</td><td>AI는 커밋·push·배포를 못 한다. 관리자 승인 후에만 시스템이 반영한다.</td></tr>
+  <tr><td>AI가 다른 폴더의 비밀 파일 열람</td><td>작업 폴더 밖 경로 접근을 차단한다. 인터넷 검색도 끈다.</td></tr>
+  <tr><td>비밀번호 노출</td><td>비밀값은 화면에 이름만 보이고, 실행할 때 환경변수로만 전달한다.</td></tr>
+  <tr><td>배포 후 문제 발생</td><td>[되돌리기] 한 번으로 직전 배포를 취소한다.</td></tr>
+  <tr><td>AI가 해결 못 함</td><td>"개발자 호출"로 알림을 보내고 작업 브랜치를 보관한다.</td></tr>
+</table>
+
+<h2>비용</h2>
+<table>
+  <tr><th style="width:30%">작업</th><th>대략 비용 (실측)</th></tr>
+  <tr><td>버튼 작업 (빌드·실행)</td><td>0원</td></tr>
+  <tr><td>질문 답변</td><td>약 $0.002</td></tr>
+  <tr><td>데이터 폴더 분석</td><td>약 $0.004</td></tr>
+  <tr><td>코드 수정 1건</td><td>약 $0.1 ~ $0.5 (요청당 상한 $1)</td></tr>
+</table>
+
+<h2>기술 구성</h2>
+<table>
+  <tr><td style="width:30%">서버</td><td>Python · FastAPI · SQLite</td></tr>
+  <tr><td>AI</td><td>Claude Agent SDK(Claude Code 엔진), 분류·질문은 Anthropic SDK + Haiku</td></tr>
+  <tr><td>화면</td><td>HTML 한 장 (2초마다 새로고침)</td></tr>
+  <tr><td>실행</td><td>Windows <code>run.bat</code> · Linux <code>run.sh</code> → http://localhost:8080</td></tr>
+  <tr><td>첫 적용 사례</td><td>벡터바이오 vbiomechanics (Spring Boot · PostgreSQL)</td></tr>
+</table>
+
+<h2>진행 현황</h2>
+<table>
+  <tr><td class="done" style="width:30%">완료</td><td>전체 흐름(요청 → 수정 → 승인 → push) 실제 검증, 버튼 작업, 미리 보기, 되돌리기, 자동 분류, 데이터 파일, 모바일 화면</td></tr>
+  <tr><td class="todo">다음</td><td>실행 중인 AI 작업 중단 버튼 · 비밀값 암호화 · 외부 접속(Tailscale) · 휴대폰 파일 올리기</td></tr>
+  <tr><td class="todo">운영 전</td><td>HTTPS · 로그인 강화 · 서버 격리(컨테이너) · Linux 서비스 등록</td></tr>
+</table>
+
+</main>
+</body>
+</html>
